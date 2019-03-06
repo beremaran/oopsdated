@@ -1,0 +1,38 @@
+version: '3'
+
+volumes:
+  mysql_data:
+
+services:
+  mysql:
+    image: mysql:5.7
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_DATABASE=symfony
+      - MYSQL_USER=symfony
+      - MYSQL_PASSWORD=symfony
+    volumes:
+      - mysql_data
+    restart: on-failure
+  rabbitmq:
+    image: rabbitmq:3
+    restart: on-failure
+  fpm:
+    restart: on-failure
+    build:
+      context: .
+    ports:
+      - "9000:9000"
+    volumes:
+      - "./:/var/www/symfony"
+    depends_on:
+      - mysql
+  worker:
+    restart: on-failure
+    build:
+      context: ./.docker/worker
+    volumes:
+      - "./:/var/www/symfony"
+    depends_on:
+      - rabbitmq
+      - mysql

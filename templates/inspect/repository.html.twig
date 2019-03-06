@@ -1,0 +1,55 @@
+{% extends "base.html.twig" %}
+
+{% block body %}
+    <div class="container p-5">
+        <h3>{{ repoName }}</h3>
+        <a href="https://github.com/{{ repoName }}" target="_blank">
+            <i class="fab fa-fw fa-github"></i>
+            See on Github
+        </a>
+        <p>{{ nOutdated }} outdated dependencies.</p>
+
+        {% for packageManager in packageManagers %}
+            <h4>{{ packageManager.name }}</h4>
+
+            <table class="table table-bordered table-striped">
+                <thead>
+                <tr>
+                    <th>Package</th>
+                    <th>Your Version</th>
+                    <th>Latest Version</th>
+                    <th>Status</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for dependency in packageManager.dependencies %}
+                    <tr>
+                        <td>{{ dependency.package }}</td>
+                        <td>{{ dependency.version }}</td>
+                        <td>{{ dependency.latestVersion }}</td>
+                        <td>
+                            {% if dependency.outdated %}
+                                <span class="text-danger">outdated</span>
+                            {% else %}
+                                <span class="text-success">up-to-date</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        {% endfor %}
+    </div>
+{% endblock %}
+
+{% block javascripts %}
+    <script defer src="https://use.fontawesome.com/releases/v5.7.2/js/solid.js"
+            integrity="sha384-6FXzJ8R8IC4v/SKPI8oOcRrUkJU8uvFK6YJ4eDY11bJQz4lRw5/wGthflEOX8hjL"
+            crossorigin="anonymous"></script>
+    <script defer src="https://use.fontawesome.com/releases/v5.7.2/js/brands.js"
+            integrity="sha384-zJ8/qgGmKwL+kr/xmGA6s1oXK63ah5/1rHuILmZ44sO2Bbq1V3p3eRTkuGcivyhD"
+            crossorigin="anonymous"></script>
+    <script defer src="https://use.fontawesome.com/releases/v5.7.2/js/fontawesome.js"
+            integrity="sha384-xl26xwG2NVtJDw2/96Lmg09++ZjrXPc89j0j7JHjLOdSwHDHPHiucUjfllW0Ywrq"
+            crossorigin="anonymous"></script>
+{% endblock %}

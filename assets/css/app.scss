@@ -1,0 +1,162 @@
+@import url('https://fonts.googleapis.com/css?family=Roboto:300,400|Source+Sans+Pro');
+
+$primary: #339a86;
+$secondary: #B9D4DB;
+
+$source-sans: 'Source Sans Pro', sans-serif;
+$roboto: 'Roboto', sans-serif;
+$custom-orange: #ff8c53;
+
+$font-family-base: $source-sans;
+
+@import "~bootstrap/scss/bootstrap.scss";
+
+html, body {
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.nb {
+  height: 80px;
+  line-height: 80px;
+}
+
+.nb-brand {
+  margin: 40px;
+  color: $white;
+  font-size: 24px;
+  font-weight: 300;
+  text-decoration: none;
+  font-family: $source-sans;
+}
+
+.hero {
+
+  height: 450px;
+
+  @media screen and (max-width: 767px) {
+    height: 100vh;
+  }
+
+  &.small {
+    height: 200px;
+  }
+
+  position: relative;
+  background: url("../img/hero_lg.png");
+  background-size: cover;
+}
+
+.hero-slogan {
+  color: $white;
+  font-size: 96px;
+  text-shadow: 0 2px 4px $black;
+  font-family: $source-sans;
+}
+
+.down-the-road {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+
+  width: 100%;
+}
+
+.col-cta {
+  width: 500px;
+
+  @media screen and (max-width: 768px) {
+    width: 100%;
+  }
+
+  padding: 20px;
+}
+
+.col-cta-form {
+  @extend .col-cta;
+
+  border-radius: 20px 20px 0 0;
+  background-color: $custom-orange;
+  color: #fff;
+}
+
+.col-cta-desc {
+  @extend .col-cta;
+
+  border-radius: 0 0 20px 20px;
+  background-color: $secondary;
+
+  h3 {
+    font-weight: 300;
+    text-align: center;
+    font-family: $roboto;
+  }
+}
+
+.bg-custom-orange {
+  background-color: $custom-orange;
+}
+
+.step {
+  display: flex;
+  padding: 10px 20px;
+  line-height: 64px;
+  flex-direction: row;
+
+  font-family: $roboto;
+
+  .number {
+    font-size: 64px;
+    font-weight: 300;
+  }
+
+  .description {
+    text-align: right;
+    flex-grow: 1;
+    font-size: 36px;
+    font-weight: 300;
+  }
+}
+
+.col-latest-repos {
+  padding: 20px;
+  flex-grow: 1;
+
+  h3 {
+    color: $white;
+    font-size: 36px;
+    font-weight: 300;
+    font-family: $roboto;
+  }
+}
+
+.latest-repo-row {
+  line-height: 2em;
+
+  .fa-github {
+    @media screen and (max-width: 767px) {
+      display: none;
+    }
+  }
+
+  .repo-link {
+    padding-left: 5px;
+    font-size: 22px;
+  }
+
+  .badge {
+    font-size: 20px;
+  }
+}
+
+footer {
+  padding: 50px 0;
+  height: 100px;
+  display: flex;
+  justify-content: center;
+  color: #eee;
+  background-color: #222;
+}

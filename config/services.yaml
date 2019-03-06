@@ -1,0 +1,83 @@
+# This file is the entry point to configure your own services.
+# Files in the packages/ subdirectory configure your dependencies.
+
+# Put parameters here that don't need to change on each machine where the app is deployed
+# https://symfony.com/doc/current/best_practices/configuration.html#application-related-configuration
+parameters:
+  locale: 'en'
+  binDir: '%kernel.root_dir%/../bin'
+
+services:
+  # default configuration for services in *this* file
+  _defaults:
+    autowire: true      # Automatically injects dependencies in your services.
+    autoconfigure: true # Automatically registers your services as commands, event subscribers, etc.
+
+  # makes classes in src/ available to be used as services
+  # this creates a service per class whose id is the fully-qualified class name
+  App\:
+    resource: '../src/*'
+    exclude: '../src/{DependencyInjection,Entity,Migrations,Tests,Kernel.php}'
+
+  # controllers are imported separately to make sure services can be injected
+  # as action arguments even if you don't extend any base controller class
+  App\Controller\:
+    resource: '../src/Controller'
+    tags: ['controller.service_arguments']
+
+  # add more service definitions when explicit configuration is needed
+  # please note that last definitions always *replace* previous ones
+
+  app.registry.npm:
+    class: App\Service\NPMRegistry
+    bind:
+      $guzzleClient: '@eight_points_guzzle.client.npm'
+
+  App\Service\NPMRegistry:
+    alias: app.registry.npm
+
+  app.registry.npm.test:
+    alias: app.registry.npm
+    public: true
+
+  app.registry.packagist:
+    class: App\Service\PackagistRegistry
+    bind:
+      $guzzleClient: '@eight_points_guzzle.client.packagist'
+
+  App\Service\PackagistRegistry:
+    alias: app.registry.packagist
+
+  app.registry.packagist.test:
+    alias: app.registry.packagist
+    public: true
+
+  app.github.client:
+    class: App\Service\GithubClient
+    bind:
+      $guzzleClient: '@eight_points_guzzle.client.github'
+
+  app.github.client.test:
+    alias: app.github.client
+    public: true
+
+  App\Service\GithubClient:
+    alias: app.github.client
+
+  app.configuration_parser.npm:
+    class: App\Service\NPMConfigurationParser
+    public: true
+
+  app.configuration_parser.composer:
+    class: App\Service\ComposerConfigurationParser
+    public: true
+
+  App\Service\ConfigurationParserFactory:
+    arguments:
+      - '@app.configuration_parser.composer'
+      - '@app.configuration_parser.npm'
+
+  App\Service\RegistryFactory:
+    arguments:
+      - '@app.registry.npm'
+      - '@app.registry.packagist'

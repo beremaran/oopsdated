@@ -1,0 +1,11 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+    <div class="container p-5">
+        <h3>Subscription Completed</h3>
+        <p>We have queued your request. Besides of this first quick report, if there's a problem with your dependencies,
+            you will get your report daily.</p>
+
+        <a href="{{ url('home') }}" class="btn btn-primary btn-lg">Subscribe to Another Repo</a>
+    </div>
+{% endblock %}

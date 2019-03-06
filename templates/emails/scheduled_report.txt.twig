@@ -1,0 +1,14 @@
+Repository: {{ repoName }}
+
+
+{% for packageManager in packageManagers %}
+    {{ packageManager.name }}
+    {% for dependency in packageManager.dependencies %}
+        {{ dependency.package }}
+        {% if dependency.outdated %}
+            needs upgrade
+        {% else %}
+            up-to-date
+        {% endif %}
+    {% endfor %}
+{% endfor %}

@@ -1,0 +1,81 @@
+{% extends "base.html.twig" %}
+
+{% block header %}
+    {% include "landing/header.html.twig" %}
+{% endblock %}
+
+{% block body %}
+    <section class="bg-custom-orange flex-grow-1 pb-5">
+        <div class="container d-flex flex-column flex-lg-row justify-content-between align-content-end pb-5">
+            <div class="col-cta-desc">
+                <h3>Simple as 1-2-3</h3>
+
+                <div class="step">
+                    <div class="number">
+                        1
+                    </div>
+                    <div class="description">
+                        set an alarm
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="number">
+                        2
+                    </div>
+                    <div class="description">
+                        keep developing
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="number">
+                        3
+                    </div>
+                    <div class="description">
+                        get notified
+                    </div>
+                </div>
+            </div>
+            <div class="col-latest-repos">
+                <h3>Popular Repositories</h3>
+
+                <div class="card">
+                    <ul class="list-group list-group-flush">
+                        {% if popularRepositories|length == 0 %}
+                            <li class="list-group-item">
+                                Oh, no repositories yet. Why don't you add one?
+                            </li>
+                        {% endif %}
+
+                        {% for repo in popularRepositories %}
+                            <li class="list-group-item d-flex latest-repo-row">
+                                <i class="fab fa-github fa-fw fa-2x"></i>
+                                <a href="{{ url('inspect', {repoName: repo.name}) }}"
+                                   class="flex-grow-1 repo-link">
+                                    {{ repo.name }}
+                                </a>
+                                <span class="badge badge-primary">
+                                <i class="fas fa-fw fa-bell"></i>
+                                {{ repo.subscribedEmails|length }}
+                            </span>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+{% endblock %}
+
+{% block javascripts %}
+    <script defer src="https://use.fontawesome.com/releases/v5.7.2/js/solid.js"
+            integrity="sha384-6FXzJ8R8IC4v/SKPI8oOcRrUkJU8uvFK6YJ4eDY11bJQz4lRw5/wGthflEOX8hjL"
+            crossorigin="anonymous"></script>
+    <script defer src="https://use.fontawesome.com/releases/v5.7.2/js/brands.js"
+            integrity="sha384-zJ8/qgGmKwL+kr/xmGA6s1oXK63ah5/1rHuILmZ44sO2Bbq1V3p3eRTkuGcivyhD"
+            crossorigin="anonymous"></script>
+    <script defer src="https://use.fontawesome.com/releases/v5.7.2/js/fontawesome.js"
+            integrity="sha384-xl26xwG2NVtJDw2/96Lmg09++ZjrXPc89j0j7JHjLOdSwHDHPHiucUjfllW0Ywrq"
+            crossorigin="anonymous"></script>
+{% endblock %}
