@@ -25,7 +25,6 @@ class HomeController extends AbstractController
      * @param GithubRepoRepository $repoRepository
      * @param ProducerInterface $producer
      * @return \Symfony\Component\HttpFoundation\Response
-     * @throws \Psr\SimpleCache\InvalidArgumentException
      */
     public function index(Request $request,
                           GithubRepoRepository $repoRepository,
