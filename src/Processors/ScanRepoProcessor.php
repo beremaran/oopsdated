@@ -108,7 +108,7 @@ class ScanRepoProcessor implements Processor, TopicSubscriberInterface
                 }
 
                 $dependencies[$i] = $this->summarizeVersionInfo($package, $latestPackage);
-                if ($dependencies[$i]['isOutdated']) {
+                if ($dependencies[$i]['outdated']) {
                     $nOutdated++;
                 }
             }
