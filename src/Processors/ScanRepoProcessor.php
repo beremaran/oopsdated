@@ -107,9 +107,13 @@ class ScanRepoProcessor implements Processor, TopicSubscriberInterface
                     continue;
                 }
 
-                $dependencies[$i] = $this->summarizeVersionInfo($package, $latestPackage);
-                if ($dependencies[$i]['outdated']) {
-                    $nOutdated++;
+                try {
+                    $dependencies[$i] = $this->summarizeVersionInfo($package, $latestPackage);
+                    if ($dependencies[$i]['outdated']) {
+                        $nOutdated++;
+                    }
+                } catch (\Exception $e) {
+                    $dependencies[$i] = null;
                 }
             }
 
@@ -167,17 +171,34 @@ class ScanRepoProcessor implements Processor, TopicSubscriberInterface
      * @param Package $package
      * @param Package $latestPackage
      * @return bool
+     * @throws \Exception
      */
     public function isOutdated($package, $latestPackage): bool
     {
         if (!$this->isDevelopmentVersion($package)) {
-            $version = $package->getVersion();
-            $latestVersion = $latestPackage->getVersion();
+            $version = $this->stripVersion($package->getVersion());
+            $latestVersion = $this->stripVersion($latestPackage->getVersion());
 
-            return !VersionComparator::compareVersionRange($latestVersion, $version);
+            try {
+                return !VersionComparator::compareVersionRange($latestVersion, $version);
+            } catch (\Exception $e) {
+                $this->logger->error($e->getMessage() . ' - ' . $e->getFile() . ' - ' . $e->getLine());
+                $this->logger->error($version . ' - ' . $latestVersion);
+
+                throw $e;
+            }
         }
 
         return false;
+    }
+
+    /**
+     * @param string $version
+     * @return string
+     */
+    protected function stripVersion(string $version): string
+    {
+        return trim($version, 'v');
     }
 
     /**
@@ -205,6 +226,7 @@ class ScanRepoProcessor implements Processor, TopicSubscriberInterface
      * @param Package $package
      * @param Package $latestPackage
      * @return array
+     * @throws \Exception
      */
     public function summarizeVersionInfo($package, $latestPackage): array
     {
