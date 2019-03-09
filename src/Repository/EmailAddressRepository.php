@@ -36,6 +36,9 @@ class EmailAddressRepository extends ServiceEntityRepository
     /**
      * @param string $emailAddress
      * @return EmailAddress
+     * @throws \Doctrine\ORM\NonUniqueResultException
+     * @throws \Doctrine\ORM\ORMException
+     * @throws \Doctrine\ORM\OptimisticLockException
      */
     public function findOneOrCreate($emailAddress): EmailAddress
     {
