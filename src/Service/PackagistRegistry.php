@@ -49,6 +49,10 @@ class PackagistRegistry extends AbstractPackageRegistry
             return strpos($version, 'dev') === false;
         });
 
+        if (count($versions) === 0) {
+            return '0.0.0';
+        }
+
         $versions = array_map(function (string $version) {
             return ltrim($version, 'v');
         }, $versions);
