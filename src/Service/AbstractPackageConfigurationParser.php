@@ -51,7 +51,7 @@ abstract class AbstractPackageConfigurationParser
     public abstract function getConfigurationFileFormat(): string;
 
     /**
-     * @param $fileContents string
+     * @param string $fileContents
      */
     public function parse(string $fileContents)
     {
