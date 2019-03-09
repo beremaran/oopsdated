@@ -107,17 +107,10 @@ class ScanRepoProcessor implements Processor, TopicSubscriberInterface
                     continue;
                 }
 
-                $isOutdated = $this->isOutdated($package, $latestPackage);
-                if ($isOutdated) {
+                $dependencies[$i] = $this->summarizeVersionInfo($package, $latestPackage);
+                if ($dependencies[$i]['isOutdated']) {
                     $nOutdated++;
                 }
-
-                $dependencies[$i] = [
-                    'package' => $package->getName(),
-                    'outdated' => $isOutdated,
-                    'version' => $package->getVersion(),
-                    'latestVersion' => $latestPackage->getVersion()
-                ];
             }
 
             $repoDependencies[] = [
@@ -144,7 +137,6 @@ class ScanRepoProcessor implements Processor, TopicSubscriberInterface
         $this->entityManager->flush();
 
         if ($nOutdated > 0) {
-            $this->logger->info('Sending reports ...');
             $this->producer->sendEvent('mailReport', json_encode([
                 'repoName' => $repoName,
                 'nOutdated' => $nOutdated,
@@ -207,6 +199,21 @@ class ScanRepoProcessor implements Processor, TopicSubscriberInterface
         }
 
         return $repo;
+    }
+
+    /**
+     * @param Package $package
+     * @param Package $latestPackage
+     * @return array
+     */
+    public function summarizeVersionInfo($package, $latestPackage): array
+    {
+        return [
+            'package' => $package->getName(),
+            'outdated' => $this->isOutdated($package, $latestPackage),
+            'version' => $package->getVersion(),
+            'latestVersion' => $latestPackage->getVersion()
+        ];
     }
 
     /**
