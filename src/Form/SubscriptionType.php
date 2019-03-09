@@ -24,14 +24,16 @@ class SubscriptionType extends AbstractType
                 'required' => true,
                 'label' => 'A Github Repository please:',
                 'attr' => [
-                    'class' => 'form-control'
+                    'class' => 'form-control',
+                    'placeholder' => 'beremaran/oopsdated'
                 ]
             ])
             ->add('emailAddress', EmailType::class, [
                 'required' => true,
                 'label' => 'What\'s your e-mail address?',
                 'attr' => [
-                    'class' => 'form-control'
+                    'class' => 'form-control',
+                    'placeholder' => 'berke.emrecan.arslan@gmail.com'
                 ]
             ])
             ->add('Subscribe', SubmitType::class, [
