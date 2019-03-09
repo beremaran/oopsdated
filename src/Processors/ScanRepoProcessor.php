@@ -9,6 +9,7 @@
 namespace App\Processors;
 
 
+use App\Entity\Package;
 use App\Entity\ScanResult;
 use App\Repository\ConfigurationFileRepository;
 use App\Repository\GithubRepoRepository;
@@ -76,11 +77,8 @@ class ScanRepoProcessor implements Processor, TopicSubscriberInterface
             return self::REJECT;
         }
 
-        $this->logger->info('Scanning repository: ' . $repoName);
-
         $repo = $this->repoRepository->findOneByName($repoName);
         if ($repo === null) {
-            $this->logger->error('Could not find the repository: ' . $repoName);
             return self::REJECT;
         }
 
@@ -109,7 +107,6 @@ class ScanRepoProcessor implements Processor, TopicSubscriberInterface
             $parser->parse($configFile->getContent());
             $dependencies = $parser->getDependencies();
 
-            $this->logger->debug('Comparing ' . count($dependencies) . ' ' . $packageManager . ' dependencies ...');
             foreach ($dependencies as $i => $package) {
                 $latestPackage = $registry->getPackageByName($package->getName());
                 if ($latestPackage === null) {
@@ -117,11 +114,15 @@ class ScanRepoProcessor implements Processor, TopicSubscriberInterface
                     continue;
                 }
 
-                try {
-                    $isOutdated = !VersionComparator::compareVersionRange($latestPackage->getVersion(), $package->getVersion());
-                } catch (\Exception $e) {
-                    $this->logger->error('Bad syntax: ' . $latestPackage->getVersion() . ' - ' . $package->getVersion());
-                    continue;
+                if (!$this->isDevelopmentVersion($package)) {
+                    try {
+                        $isOutdated = !VersionComparator::compareVersionRange($latestPackage->getVersion(), $package->getVersion());
+                    } catch (\Exception $e) {
+                        $dependencies[$i] = null;
+                        continue;
+                    }
+                } else {
+                    $isOutdated = false;
                 }
 
                 if ($isOutdated) {
@@ -176,6 +177,15 @@ class ScanRepoProcessor implements Processor, TopicSubscriberInterface
         }
 
         return self::ACK;
+    }
+
+    /**
+     * @param Package $package
+     * @return bool
+     */
+    public function isDevelopmentVersion($package): bool
+    {
+        return strpos($package->getVersion(), 'dev') !== false;
     }
 
     /**
