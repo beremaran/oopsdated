@@ -140,20 +140,12 @@ class ScanRepoProcessor implements Processor, TopicSubscriberInterface
         $this->entityManager->persist($scanResult);
         $this->entityManager->flush();
 
-        if ($nOutdated > 0) {
-            $this->producer->sendEvent('mailReport', json_encode([
-                'repoName' => $repoName,
-                'nOutdated' => $nOutdated,
-                'report' => $repoDependencies,
-                'onlyReportTo' => $onlyReportTo
-            ]));
-        } elseif ($onlyReportTo !== null) {
-            $this->producer->sendEvent('mailReport', json_encode([
-                'nOutdated' => 0,
-                'repoName' => $repoName,
-                'onlyReportTo' => $onlyReportTo
-            ]));
-        }
+        $this->producer->sendEvent('mailReport', json_encode([
+            'repoName' => $repoName,
+            'nOutdated' => $nOutdated,
+            'report' => $repoDependencies,
+            'onlyReportTo' => $onlyReportTo
+        ]));
 
         return self::ACK;
     }
