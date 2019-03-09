@@ -9,6 +9,7 @@
 namespace App\Processors;
 
 
+use App\Entity\GithubRepo;
 use App\Entity\Package;
 use App\Entity\ScanResult;
 use App\Repository\ConfigurationFileRepository;
@@ -72,20 +73,12 @@ class ScanRepoProcessor implements Processor, TopicSubscriberInterface
     {
         $data = json_decode($message->getBody(), true);
         $repoName = $data['repoName'];
-        $onlyReportTo = isset($data['onlyReportTo']) ? $data['onlyReportTo'] : null;
         if ($repoName === null) {
             return self::REJECT;
         }
 
-        $repo = $this->repoRepository->findOneByName($repoName);
-        if ($repo === null) {
-            return self::REJECT;
-        }
-
-        $tDiff = (new \DateTime())->getTimestamp() - $repo->getUpdatedAt()->getTimestamp();
-        if ($tDiff > 3600) {
-            $repo = $this->githubClient->fetchRepository($repoName);
-        }
+        $onlyReportTo = $data['onlyReportTo'] ?? null;
+        $repo = $this->getOrFetchRepo($repoName);
 
         $nOutdated = 0;
         $repoDependencies = [];
@@ -193,6 +186,27 @@ class ScanRepoProcessor implements Processor, TopicSubscriberInterface
         }
 
         return false;
+    }
+
+    /**
+     * @param $repoName
+     * @return GithubRepo|null
+     * @throws \Doctrine\ORM\NonUniqueResultException
+     * @throws \Exception
+     */
+    public function getOrFetchRepo($repoName): ?GithubRepo
+    {
+        $repo = $this->repoRepository->findOneByName($repoName);
+        if ($repo === null) {
+            return null;
+        }
+
+        $tDiff = (new \DateTime())->getTimestamp() - $repo->getUpdatedAt()->getTimestamp();
+        if ($tDiff > 3600) {
+            return $this->githubClient->fetchRepository($repoName);
+        }
+
+        return $repo;
     }
 
     /**
