@@ -114,17 +114,7 @@ class ScanRepoProcessor implements Processor, TopicSubscriberInterface
                     continue;
                 }
 
-                if (!$this->isDevelopmentVersion($package)) {
-                    try {
-                        $isOutdated = !VersionComparator::compareVersionRange($latestPackage->getVersion(), $package->getVersion());
-                    } catch (\Exception $e) {
-                        $dependencies[$i] = null;
-                        continue;
-                    }
-                } else {
-                    $isOutdated = false;
-                }
-
+                $isOutdated = $this->isOutdated($package, $latestPackage);
                 if ($isOutdated) {
                     $nOutdated++;
                 }
@@ -186,6 +176,23 @@ class ScanRepoProcessor implements Processor, TopicSubscriberInterface
     public function isDevelopmentVersion($package): bool
     {
         return strpos($package->getVersion(), 'dev') !== false;
+    }
+
+    /**
+     * @param Package $package
+     * @param Package $latestPackage
+     * @return bool
+     */
+    public function isOutdated($package, $latestPackage): bool
+    {
+        if (!$this->isDevelopmentVersion($package)) {
+            $version = $package->getVersion();
+            $latestVersion = $latestPackage->getVersion();
+
+            return !VersionComparator::compareVersionRange($latestVersion, $version);
+        }
+
+        return false;
     }
 
     /**
