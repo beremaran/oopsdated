@@ -108,17 +108,27 @@ class SendReportMailProcessor implements Processor, TopicSubscriberInterface
             }
         }
 
-        // flush the spool
-        $process = new Process(['php', './console', 'swiftmailer:spool:send'], $this->parameterBag->get('binDir'));
-
         try {
-            $process->mustRun();
+            $this->flushMailSpool();
         } catch (ProcessFailedException $e) {
             $this->logger->error($e->getMessage() . ' - ' . $e->getFile() . ' - ' . $e->getLine());
             return self::REJECT;
         }
 
         return self::ACK;
+    }
+
+    /**
+     * @throws ProcessFailedException
+     */
+    protected function flushMailSpool(): void
+    {
+        $process = new Process(
+            ['php', './console', 'swiftmailer:spool:send']
+            , $this->parameterBag->get('binDir')
+        );
+
+        $process->mustRun();
     }
 
     /**

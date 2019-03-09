@@ -33,6 +33,26 @@ class EmailAddressRepository extends ServiceEntityRepository
             ->getOneOrNullResult();
     }
 
+    /**
+     * @param string $emailAddress
+     * @return EmailAddress
+     * @throws \Doctrine\ORM\NonUniqueResultException
+     * @throws \Doctrine\ORM\ORMException
+     * @throws \Doctrine\ORM\OptimisticLockException
+     */
+    public function findOneOrCreate($emailAddress): EmailAddress
+    {
+        $email = $this->findOne($emailAddress);
+        if ($email === null) {
+            $email = new EmailAddress();
+            $email->setEmail($emailAddress);
+            $this->getEntityManager()->persist($email);
+            $this->getEntityManager()->flush($email);
+        }
+
+        return $email;
+    }
+
     // /**
     //  * @return EmailAddress[] Returns an array of EmailAddress objects
     //  */

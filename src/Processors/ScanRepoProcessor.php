@@ -9,6 +9,8 @@
 namespace App\Processors;
 
 
+use App\Entity\GithubRepo;
+use App\Entity\Package;
 use App\Entity\ScanResult;
 use App\Repository\ConfigurationFileRepository;
 use App\Repository\GithubRepoRepository;
@@ -71,23 +73,12 @@ class ScanRepoProcessor implements Processor, TopicSubscriberInterface
     {
         $data = json_decode($message->getBody(), true);
         $repoName = $data['repoName'];
-        $onlyReportTo = isset($data['onlyReportTo']) ? $data['onlyReportTo'] : null;
         if ($repoName === null) {
             return self::REJECT;
         }
 
-        $this->logger->info('Scanning repository: ' . $repoName);
-
-        $repo = $this->repoRepository->findOneByName($repoName);
-        if ($repo === null) {
-            $this->logger->error('Could not find the repository: ' . $repoName);
-            return self::REJECT;
-        }
-
-        $tDiff = (new \DateTime())->getTimestamp() - $repo->getUpdatedAt()->getTimestamp();
-        if ($tDiff > 3600) {
-            $repo = $this->githubClient->fetchRepository($repoName);
-        }
+        $onlyReportTo = $data['onlyReportTo'] ?? null;
+        $repo = $this->getOrFetchRepo($repoName);
 
         $nOutdated = 0;
         $repoDependencies = [];
@@ -109,7 +100,6 @@ class ScanRepoProcessor implements Processor, TopicSubscriberInterface
             $parser->parse($configFile->getContent());
             $dependencies = $parser->getDependencies();
 
-            $this->logger->debug('Comparing ' . count($dependencies) . ' ' . $packageManager . ' dependencies ...');
             foreach ($dependencies as $i => $package) {
                 $latestPackage = $registry->getPackageByName($package->getName());
                 if ($latestPackage === null) {
@@ -117,23 +107,10 @@ class ScanRepoProcessor implements Processor, TopicSubscriberInterface
                     continue;
                 }
 
-                try {
-                    $isOutdated = !VersionComparator::compareVersionRange($latestPackage->getVersion(), $package->getVersion());
-                } catch (\Exception $e) {
-                    $this->logger->error('Bad syntax: ' . $latestPackage->getVersion() . ' - ' . $package->getVersion());
-                    continue;
-                }
-
-                if ($isOutdated) {
+                $dependencies[$i] = $this->summarizeVersionInfo($package, $latestPackage);
+                if ($dependencies[$i]['isOutdated']) {
                     $nOutdated++;
                 }
-
-                $dependencies[$i] = [
-                    'package' => $package->getName(),
-                    'outdated' => $isOutdated,
-                    'version' => $package->getVersion(),
-                    'latestVersion' => $latestPackage->getVersion()
-                ];
             }
 
             $repoDependencies[] = [
@@ -160,7 +137,6 @@ class ScanRepoProcessor implements Processor, TopicSubscriberInterface
         $this->entityManager->flush();
 
         if ($nOutdated > 0) {
-            $this->logger->info('Sending reports ...');
             $this->producer->sendEvent('mailReport', json_encode([
                 'repoName' => $repoName,
                 'nOutdated' => $nOutdated,
@@ -176,6 +152,68 @@ class ScanRepoProcessor implements Processor, TopicSubscriberInterface
         }
 
         return self::ACK;
+    }
+
+    /**
+     * @param Package $package
+     * @return bool
+     */
+    public function isDevelopmentVersion($package): bool
+    {
+        return strpos($package->getVersion(), 'dev') !== false;
+    }
+
+    /**
+     * @param Package $package
+     * @param Package $latestPackage
+     * @return bool
+     */
+    public function isOutdated($package, $latestPackage): bool
+    {
+        if (!$this->isDevelopmentVersion($package)) {
+            $version = $package->getVersion();
+            $latestVersion = $latestPackage->getVersion();
+
+            return !VersionComparator::compareVersionRange($latestVersion, $version);
+        }
+
+        return false;
+    }
+
+    /**
+     * @param $repoName
+     * @return GithubRepo|null
+     * @throws \Doctrine\ORM\NonUniqueResultException
+     * @throws \Exception
+     */
+    public function getOrFetchRepo($repoName): ?GithubRepo
+    {
+        $repo = $this->repoRepository->findOneByName($repoName);
+        if ($repo === null) {
+            return null;
+        }
+
+        $tDiff = (new \DateTime())->getTimestamp() - $repo->getUpdatedAt()->getTimestamp();
+        if ($tDiff > 3600) {
+            return $this->githubClient->fetchRepository($repoName);
+        }
+
+        return $repo;
+    }
+
+    /**
+     * @param Package $package
+     * @param Package $latestPackage
+     * @return array
+     */
+    public function summarizeVersionInfo($package, $latestPackage): array
+    {
+        return [
+            'package' => $package->getName(),
+            'outdated' => $this->isOutdated($package, $latestPackage),
+            'version' => $package->getVersion(),
+            'latestVersion' => $latestPackage->getVersion()
+        ];
     }
 
     /**

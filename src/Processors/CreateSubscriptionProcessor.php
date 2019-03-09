@@ -57,6 +57,8 @@ class CreateSubscriptionProcessor implements Processor, TopicSubscriberInterface
      *
      * @return string|object with __toString method implemented
      * @throws \Doctrine\ORM\NonUniqueResultException
+     * @throws \Doctrine\ORM\ORMException
+     * @throws \Doctrine\ORM\OptimisticLockException
      */
     public function process(Message $message, Context $context)
     {
@@ -69,19 +71,12 @@ class CreateSubscriptionProcessor implements Processor, TopicSubscriberInterface
             if ($localRepo === null) {
                 return self::REJECT;
             }
-
         }
 
-        $localEmailAddress = $this->emailAddressRepository->findOne($data['emailAddress']);
-        if ($localEmailAddress === null) {
-            $localEmailAddress = new EmailAddress();
-            $localEmailAddress->setEmail($data['emailAddress']);
-            $this->entityManager->persist($localEmailAddress);
-        }
-
+        $localEmailAddress = $this->emailAddressRepository->findOneOrCreate($data['emailAddress']);
         $isNewSubscription = !$localRepo->getSubscribedEmails()->contains($localEmailAddress);
 
-        if ($isNewSubscription || true) {
+        if ($isNewSubscription) {
             $localRepo->addSubscribedEmail($localEmailAddress);
             $localEmailAddress->addGithubRepo($localRepo);
 
