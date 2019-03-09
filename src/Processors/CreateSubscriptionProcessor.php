@@ -57,6 +57,8 @@ class CreateSubscriptionProcessor implements Processor, TopicSubscriberInterface
      *
      * @return string|object with __toString method implemented
      * @throws \Doctrine\ORM\NonUniqueResultException
+     * @throws \Doctrine\ORM\ORMException
+     * @throws \Doctrine\ORM\OptimisticLockException
      */
     public function process(Message $message, Context $context)
     {
